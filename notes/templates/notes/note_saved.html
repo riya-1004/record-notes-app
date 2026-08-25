@@ -1,0 +1,22 @@
+{% extends "notes/base.html" %}
+
+{% block title %}Note Saved – QuickNote{% endblock %}
+
+{% block content %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="note-saved-card text-center">
+                <div class="note-saved-icon">✅</div>
+                <h2>Note saved successfully!</h2>
+                <p class="note-saved-text">"{{ note.content }}"</p>
+                <p class="note-date">{{ note.created_at|date:"d M Y, h:i A" }}</p>
+
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Back to My Notes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

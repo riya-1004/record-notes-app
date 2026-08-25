@@ -1,0 +1,100 @@
+{% extends "notes/base.html" %}
+
+{% block title %}Sign Up – QuickNote{% endblock %}
+
+{% block content %}
+
+    <style>
+        .password-field-wrap {
+            position: relative;
+        }
+        .password-field-wrap input {
+            padding-right: 42px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            color: #9d97b8;
+            line-height: 1;
+        }
+        .toggle-password:hover {
+            color: #eceafe;
+        }
+    </style>
+
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="auth-card">
+                <h3 class="text-center mb-4">Create your account</h3>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Please fix the errors below and try again.
+                    </div>
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                        {% for error in form.email.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="password-field-wrap">
+                            {{ form.password1 }}
+                            <button type="button" class="toggle-password" data-target="{{ form.password1.id_for_label }}">👁</button>
+                        </div>
+                        {% for error in form.password1.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="password-field-wrap">
+                            {{ form.password2 }}
+                            <button type="button" class="toggle-password" data-target="{{ form.password2.id_for_label }}">👁</button>
+                        </div>
+                        {% for error in form.password2.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
+                    </div>
+                </form>
+
+                <p class="text-center mt-3 mb-0">
+                    Already have an account? <a href="{% url 'login' %}">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.toggle-password').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.getAttribute('data-target'));
+                if (!input) return;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    btn.textContent = '🙈';
+                } else {
+                    input.type = 'password';
+                    btn.textContent = '👁';
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

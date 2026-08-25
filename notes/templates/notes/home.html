@@ -1,0 +1,225 @@
+{% extends "notes/base.html" %}
+
+{% block title %}QuickNote{% endblock %}
+
+{% block content %}
+
+    <style>
+        .note-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            cursor: pointer;
+        }
+        .pinned-note a[href*="update"], .pinned-note .btn-edit-icon {
+            display: inline-block;
+            background: #6c5ce7;
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        .pinned-note a[href*="update"]:hover, .pinned-note .btn-edit-icon:hover {
+            background: #5a4bd1;
+        }
+
+        .note-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 9, 18, 0.72);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 999;
+        }
+        .note-modal-overlay.open {
+            display: flex;
+        }
+        .note-modal-card {
+            width: 100%;
+            max-width: 520px;
+            background: #1e1b2e;
+            border: 1px solid #332f4a;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+        }
+        .note-modal-card h4 {
+            color: #eceafe;
+            margin: 0 0 16px;
+        }
+        .note-modal-card textarea {
+            width: 100%;
+            min-height: 180px;
+            background: #26223a;
+            border: 1px solid #332f4a;
+            border-radius: 12px;
+            color: #eceafe;
+            font-size: 15px;
+            font-family: inherit;
+            padding: 14px;
+            outline: none;
+            resize: vertical;
+        }
+        .note-modal-card textarea:focus {
+            border-color: #6c5ce7;
+        }
+        .note-modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .note-modal-actions button[type="submit"] {
+            background: #6c5ce7;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .note-modal-actions button[type="submit"]:hover {
+            background: #5a4bd1;
+        }
+        .note-modal-cancel {
+            background: transparent;
+            border: 1px solid #332f4a;
+            color: #9d97b8;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .note-modal-cancel:hover {
+            color: #eceafe;
+        }
+
+        .note-view-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #eceafe;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .note-view-date {
+            color: #9d97b8;
+            font-size: 13px;
+            margin-bottom: 18px;
+        }
+        .note-view-close {
+            background: #6c5ce7;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .note-view-close:hover {
+            background: #5a4bd1;
+        }
+    </style>
+
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="note-form-card">
+                <form method="POST" action="{% url 'create_note' %}">
+                    {% csrf_token %}
+                    {{ form.content }}
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-primary">Save Note</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="notes-list-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Your Notes</h5>
+                    <span class="note-count-badge">{{ note_count }} note{{ note_count|pluralize }} saved</span>
+                </div>
+
+                {% if notes %}
+                    <div class="notes-grid">
+                        {% for note in notes %}
+                            <div class="pinned-note">
+                                <div class="pin"></div>
+                                <form method="POST" action="{% url 'delete_note' note.id %}" class="delete-form" onsubmit="return confirm('Delete this note?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-delete-icon" title="Delete note">✕</button>
+                                </form>
+                                <button type="button" class="btn-edit-icon" onclick="openEditModal({{ note.id }})">Edit</button>
+                                <div class="note-text" onclick="openViewModal({{ note.id }})">{{ note.content }}</div>
+                                <div class="note-date">{{ note.created_at|date:"d M Y, h:i A" }}</div>
+                            </div>
+
+                            <div class="note-modal-overlay" id="note-view-{{ note.id }}">
+                                <div class="note-modal-card">
+                                    <h4>Your note</h4>
+                                    <div class="note-view-text">{{ note.content }}</div>
+                                    <div class="note-view-date">{{ note.created_at|date:"d M Y, h:i A" }}</div>
+                                    <button type="button" class="note-view-close" onclick="closeModal('note-view-{{ note.id }}')">Close</button>
+                                </div>
+                            </div>
+
+                            <div class="note-modal-overlay" id="note-edit-{{ note.id }}">
+                                <div class="note-modal-card">
+                                    <h4>Edit note</h4>
+                                    <form method="POST" action="{% url 'update_note' note.id %}">
+                                        {% csrf_token %}
+                                        <textarea name="content">{{ note.content }}</textarea>
+                                        <div class="note-modal-actions">
+                                            <button type="submit">Save changes</button>
+                                            <button type="button" class="note-modal-cancel" onclick="closeModal('note-edit-{{ note.id }}')">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-notes">No notes yet. Start by writing one above! 📝</div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function openViewModal(id) {
+            document.getElementById('note-view-' + id).classList.add('open');
+        }
+        function openEditModal(id) {
+            document.getElementById('note-edit-' + id).classList.add('open');
+        }
+        function closeModal(elementId) {
+            document.getElementById(elementId).classList.remove('open');
+        }
+        document.querySelectorAll('.note-modal-overlay').forEach(function (overlay) {
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('open');
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

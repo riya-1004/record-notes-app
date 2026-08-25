@@ -1,0 +1,76 @@
+{% extends 'notes/base.html' %}
+{% block content %}
+
+<style>
+    .edit-note-wrap {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .edit-note-wrap h2 {
+        margin-bottom: 20px;
+    }
+    .edit-note-card {
+        background: #fff;
+        border: 1px solid #e4e2ee;
+        border-radius: 18px;
+        padding: 26px;
+        box-shadow: 0 20px 40px -20px rgba(0,0,0,0.12);
+    }
+    .edit-note-card textarea {
+        width: 100%;
+        min-height: 160px;
+        border: 1px solid #dcd9ea;
+        border-radius: 12px;
+        padding: 14px;
+        font-size: 15px;
+        font-family: inherit;
+        resize: vertical;
+        outline: none;
+    }
+    .edit-note-card textarea:focus {
+        border-color: #6c5ce7;
+    }
+    .edit-note-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+    }
+    .btn-save-changes {
+        background: #6c5ce7;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .btn-save-changes:hover {
+        background: #5a4bd1;
+    }
+    .btn-cancel-link {
+        color: #6c5ce7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .btn-cancel-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="edit-note-wrap">
+    <h2>Edit note</h2>
+    <div class="edit-note-card">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.content }}
+            <div class="edit-note-actions">
+                <button type="submit" class="btn-save-changes">Save changes</button>
+                <a href="{% url 'home' %}" class="btn-cancel-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
